@@ -1,0 +1,112 @@
+---
+title: "Data analysis"
+author: "Kishore Hari"
+date: "25/05/2022"
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R basics
+
+data types: numeric, integer, character, boolean. 
+data structures: vectors (collection of variables of the same type), lists(collection of variables)
+indexing : [] for vectors, [[]] for lists
+naming : names can be assigned to elements of vectors and lists. Elements can then be accessed via the names. For lists, one can use $ to access named elements.
+missing values: NA, dealing with missing variables (na.rm)
+function: arguments - positional and named, return statement(not necessary, but useful)
+
+To understand and practice these elements, please install ["swirl"](https://swirlstats.com/students.html) package and follow the instructions to install and run the beginner course [at this link](https://github.com/swirldev/swirl_courses/blob/master/README.md). 
+
+## Dataframes
+Dataframe is the data structure used to store and work with tabular data.
+rows (observations), columns(variables)
+dataframes are lists of columns, so list-like indexing can be done.
+
+## tidyverse
+Tidyverse is a set of packages designed to wrangle, analyze and visualize tabular data. Here, We will see functions that can be used to wrangle and modify dataframes. 
+A file called dataSet.dat has been included in the repository. The table in the file is referred to as count matrix. 
+
+1. Take the count matrix, classify genes as high or low expression in a given sample using ensemble mean as the reference.
+
+```{r}
+library(tidyverse)
+```
+
+i) read the file
+
+```{r}
+df <- read_delim("dataSet.dat", delim = " ", col_names = F)
+colnames(df) <- c("SampleID", paste0("Gene", 1:14))
+means <- sapply(df, mean, na.rm = T)
+means
+sapply(df, class)
+```
+comparision
+
+```{r}
+fn <- function(x) {
+    ifelse(x > mean(x), "1", "0")
+}
+df1 <- data.frame(sapply(df[, 2:15], fn))
+```
+
+
+Repeating same operations using dplyr/tidyverse verbs.
+
+```{r}
+df2 <- read_delim("dataSet.dat", delim = " ", col_names = F) %>%
+    set_names(c("SampleID", paste0("Gene", 1:14))) %>%
+    mutate(across(.cols = contains("Gene"), .fns = fn))
+```
+
+2. arrange the dataframe by Genes1, 2, 3
+
+```{r}
+df3 <- df2 %>% arrange(Gene1, Gene2, Gene3)
+```
+
+3. select even numbered genes
+
+```{r}
+naFunc <- function(x) {
+    if (all(is.na(x)))
+        T
+    else
+        F
+}
+df3 <- df2 %>% select(paste0("Gene", (1:7)*2))
+```
+
+
+4. filter the samples that have Gene1 and Gene2 are overexpressed and Gene3 is downregulated.
+
+```{r}
+df3 <- df %>% filter(Gene1 == 1 & Gene2 == 1 & Gene3 ==0)
+```
+
+5. Find the samples that have overexpression of Gene4 or overexpression of both Gene3 and Gene5, and display the levels of Gene1 and Gene2 for these samples in ascending order of Gene1
+
+```{r}
+df3 <- df2 %>% filter(Gene4 == "1" | (Gene3 == "1" & Gene5 == "1")) %>%
+    select(Gene1, Gene2) %>% arrange(Gene1)
+
+```
+
+
+6. Gene1,2,3 belong to the same pathway A. So, get the average level of expression of the other genes in samples that have low, high and medium levels of expression of pathway A. 
+
+
+### Gather and spread
+
+Gather and spread are functions that are used to 
+
+```{r}
+df4 <- df2 %>% gather(key =  "Gene", value = "Expression", -SampleID)
+df5 <- df4 %>% spread(key = Gene, value = Expression)
+```
+
