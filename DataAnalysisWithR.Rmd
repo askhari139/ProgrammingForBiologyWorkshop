@@ -103,7 +103,7 @@ df3 <- df2 %>% filter(Gene4 == "1" | (Gene3 == "1" & Gene5 == "1")) %>%
 
 ### Gather and spread
 
-Gather and spread are functions that are used to 
+Gather and spread are functions that are used to convert data from wide to long and long to wide formats respectively. 
 
 ```{r}
 df4 <- df2 %>% gather(key =  "Gene", value = "Expression", -SampleID)
